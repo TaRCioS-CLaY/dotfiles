@@ -29,8 +29,8 @@
         fswatch
         fnlfmt
         neovim
-        nodejs
-        fnm
+        # nodejs
+        # fnm
         ripgrep
         rsync
         wget
@@ -39,6 +39,7 @@
         emacs
         kitty
         postman
+        nodePackages.prettier
       ];
 
     in {
@@ -54,7 +55,7 @@
               file.".config/nix/nix.conf".text = ''
                 experimental-features = nix-command flakes
                 '';
-              file.".npmrc".text = "prefix=~/.npm";
+              # file.".npmrc".text = "prefix=~/.npm \nregistry=https://registry.npmjs.org/";
 
   # Install MacOS applications to the user environment.
               file."Applications/Home Manager Apps".source = let
@@ -87,8 +88,9 @@
                 ];
                 extraConfig = {
                   core.editor = "nvim";
-                  init.defaultBranch = "master";
+                  init.defaultBranch = "main";
                   pull.ff = "only";
+                  http.sslVerify = false;
                 };
                 delta = {
                   enable = true;
@@ -120,14 +122,14 @@
                 };
                 settings = {
                   tab_bar_style = "powerline";
-                  watcher = "/Users/douglasmassolari/.fig/tools/kitty-integration.py";
+                  watcher = "/Users/${username}/.fig/tools/kitty-integration.py";
                   include = "${./kitty-theme.conf}";
                 };
               };
 
                lazygit = {
                  enable = true;
-                 settings.gui.theme.lightTheme = true;
+                 settings.gui.theme.lightTheme = false;
                };
 
                starship.enable = true;
