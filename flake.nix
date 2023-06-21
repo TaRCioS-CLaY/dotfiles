@@ -12,8 +12,8 @@
 
   outputs = { self, nixpkgs, home-manager, ... }:
     let
-      system = "x86_64-darwin";
-      # system = "aarch64-darwin";
+      # system = "x86_64-darwin";
+      system = "aarch64-darwin";
       username = "claytongarcia";
 
       pkgs = import nixpkgs {
@@ -37,7 +37,6 @@
         yarn
         nodePackages.ionic
         emacs
-        kitty
         postman
         nodePackages.prettier
       ];
