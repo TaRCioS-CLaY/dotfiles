@@ -1,166 +1,112 @@
 {
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  description = "TaRCioS-CLaY's Development Environment";
 
-    # Demora para instalar
-    # nixpkgs.url = "github:nixos/nixpkgs/staging";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     home-manager = {
-      url = "github:nix-community/home-manager/master";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }@inputs:
     let
       # system = "x86_64-darwin";
-      system = "aarch64-darwin";
-      username = "claytongarcia";
-
+      system = "x86_64-linux";
+      username = "$(whoami)";
       pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
+        inherit system;
+        config.allowUnfree = true;
       };
-
-
-      homePackages = with pkgs; [
-        bitwarden-cli
-        elmPackages.elm-language-server
-        fd
-        fswatch
-        fnlfmt
-        neovim
-        # nodejs
-        # fnm
-        ripgrep
-        rsync
-        wget
-        yarn
-        nodePackages.ionic
-        emacs
-        postman
-        nodePackages.prettier
-      ];
-
     in {
-      homeConfigurations.claytongarcia = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations.username = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [
-          {
-            home = {
-              stateVersion = "22.11";
-              inherit username;
-              homeDirectory = "/Users/${username}";
+        modules = [{
+          home = {
+            inherit username;
+            homeDirectory = "/Users/${username}";
+            stateVersion = "23.11";
+          };
 
-              file.".config/nix/nix.conf".text = ''
-                experimental-features = nix-command flakes
-                '';
-              # file.".npmrc".text = "prefix=~/.npm \nregistry=https://registry.npmjs.org/";
+          home.packages = with pkgs; [
+            git
+            delta
+            fd
+            curl
+            wget
+            zsh
+            fzf
+            kitty
+            lua
+            luarocks
+            zoxide
+            lazygit
+            xclip
+            appimage-run
+            fuse
+            neovim
+          ];
 
-  # Install MacOS applications to the user environment.
-              file."Applications/Home Manager Apps".source = let
-                apps = pkgs.buildEnv {
-                  name = "home-manager-applications";
-                  paths = homePackages;
-                  pathsToLink = "/Applications";
-                };
-              in "${apps}/Applications";
-
-              packages = homePackages;
+          programs.zsh = {
+            enable = true;
+            enableAutosuggestions = true;
+            enableSyntaxHighlighting = true;
+            shellAliases = {
+              ll = "ls -la";
+              update-env = "cd ~/dotfiles && nix flake update && home-manager switch --flake .#$(whoami)";
             };
+            initExtra = ''
+              eval "$(zoxide init zsh)"
+              path+=($HOME/Applications/bin)
+              path+=($HOME/.local/share/nvim/mason/bin)
+              export FZF_DEFAULT_COMMAND='fd --type f'
+            '';
+          };
 
-            programs = {
-              home-manager.enable = true;
+          programs.zplug = {
+            enable = true;
+            plugins = [
+              { name = "z-shell/F-Sy-H"; }
+              { name = "jeffreytse/zsh-vi-mode"; }
+              { name = "plugins/git"; tags = [ from:oh-my-zsh ]; }
+            ];
+          };
 
-              bat.enable = true;
+          programs.kitty = {
+            enable = true;
+            font = {
+              name = "JetBrainsMono Nerd Font";
+              size = 14;
+            };
+            settings = {
+              # enabled_layouts = "stack";
+              # window_padding_width = 10;
+              # background_opacity = "0.9";
+              tab_bar_style = "powerline";
+              # watcher = "/Users/${username}/.fig/tools/kitty-integration.py";
+              include = "${./kitty-theme.conf}";
+            };
+            keybindings = {
+              "shift+cmd+t" = "new_tab_with_cwd";
+              "kitty_mod+j" = "next_tab";
+              "kitty_mod+k" = "previous_tab";
+              "kitty_mod+enter" = "new_window_with_cwd";
+              "kitty_mod+z" = "toggle_layout stack";
+            };
+            theme = "Gruvbox Dark";
+          };
 
-              fzf.enable = true;
-
-              git = {
-                enable = true;
-                userName = "Clayton Garcia";
-                userEmail = "tarcios.clay@gmail.com";
-                includes = [
-                {
-                  path = "~/tweag/.gitconfig";
-                  condition = "gitdir:~/tweag/";
-                }
-                ];
-                extraConfig = {
-                  core.editor = "nvim";
-                  init.defaultBranch = "main";
-                  pull.ff = "only";
-                  http.sslVerify = false;
-                };
-                delta = {
-                  enable = true;
-                  options.light = true;
-                };
-              };
-
-              gh = {
-                enable = true;
-                settings = {
-                  git_protocol = "ssh";
-                  editor = "nvim";
-                  prompt = "enable";
-                };
-              };
-
-               kitty = {
-                 enable = true;
-                 font = {
-                  name = "JetBrainsMono Nerd Font";
-                  size = 14;
-                };
-                keybindings = {
-                  "shift+cmd+t" = "new_tab_with_cwd";
-                  "kitty_mod+j" = "next_tab";
-                  "kitty_mod+k" = "previous_tab";
-                  "kitty_mod+enter" = "new_window_with_cwd";
-                  "kitty_mod+z" = "toggle_layout stack";
-                };
-                settings = {
-                  tab_bar_style = "powerline";
-                  watcher = "/Users/${username}/.fig/tools/kitty-integration.py";
-                  include = "${./kitty-theme.conf}";
-                };
-              };
-
-               lazygit = {
-                 enable = true;
-                 settings.gui.theme.lightTheme = false;
-               };
-
-               starship.enable = true;
-
-              zsh = {
-                enable = true;
-                enableAutosuggestions = true;
-                initExtra = ''
-                    eval "$(fnm env --use-on-cd)"
-                    '';
-                zplug = {
-                  enable = true;
-                  plugins = [
-                  { name = "z-shell/F-Sy-H"; }
-                  { name = "jeffreytse/zsh-vi-mode"; }
-                  { name = "plugins/git"; tags = [ from:oh-my-zsh ]; }
-                  ];
-                };
-                localVariables = {
-                  ZVM_VI_INSERT_ESCAPE_BINDKEY = "jk";
-                };
-                shellAliases = {
-                  lg = "lazygit";
-                  nvid = "/Users/${username}/neovide/target/release/neovide";
-                  ll = "ls -l";
-                  ".." = "cd ..";
-                  "nsx" = "nix-shell --system x86_64-darwin";
-                };
+          programs.lazygit = {
+            enable = true;
+            settings = {
+              gui.theme = {
+                lightTheme = false;
+                activeBorderColor = ["#fabd2f" "bold"];
+                inactiveBorderColor = ["#665c54"];
               };
             };
-          }
-        ];
+          };
+        }];
       };
-  };
+    };
 }

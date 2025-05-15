@@ -1,1 +1,12 @@
-result
+# Ignore Nix outputs
+result*
+/.direnv/
+/.envrc
+
+# Ignore IDE/Editor temporários
+*.swp
+*.swo
+*.code-workspace
+
+# Ignore diretório de aplicativos
+/Applications

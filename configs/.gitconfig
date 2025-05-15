@@ -1,0 +1,26 @@
+[core]
+  editor = "nvim"
+  pager = "~/.nix-profile/bin/delta"
+  ignorecase = false
+
+[interactive]
+  diffFilter = delta --color-only
+
+[delta]
+  dark = true
+
+[github]
+  user = "TaRCioS-CLaY"
+
+[init]
+  defaultBranch = "main"
+
+[pull]
+  ff = "only"
+
+[user]
+  email = "tarcios.clay@gmail.com"
+  name = "Clayton Garcia"
+
+
+; vim:ft=gitconfig
