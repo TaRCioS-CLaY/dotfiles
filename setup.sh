@@ -29,8 +29,7 @@ install_fonts() {
     Linux*)
       mkdir -p ~/.local/share/fonts
       curl -L https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip -o /tmp/JetBrainsMono.zip
-      # unzip -q /tmp/JetBrainsMono.zip -d ~/.local/share/fonts/
-      tar xzvf /tmp/JetBrainsMono.zip -C ~/.local/share/fonts/
+      unzip -q /tmp/JetBrainsMono.zip -d ~/.local/share/fonts/
       fc-cache -fv
       ;;
     Darwin*)
@@ -40,8 +39,7 @@ install_fonts() {
     CYGWIN*|MINGW*|MSYS*)
       mkdir -p ~/AppData/Local/Microsoft/Windows/Fonts
       curl -L https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip -o /tmp/JetBrainsMono.zip
-      # unzip -q /tmp/JetBrainsMono.zip -d ~/AppData/Local/Microsoft/Windows/Fonts/
-      tar xzvf /tmp/JetBrainsMono.zip -C ~/AppData/Local/Microsoft/Windows/Fonts/
+      unzip -q /tmp/JetBrainsMono.zip -d ~/AppData/Local/Microsoft/Windows/Fonts/
       ;;
   esac
   echo -e "${CHECK} ${GREEN}Fonte instalada com sucesso!${NC}"
@@ -54,13 +52,13 @@ install_dependencies() {
   case "$(uname -s)" in
     Linux*)
       sudo apt-get update
-      sudo apt-get install -y git curl fuse libfuse2 tar gzip build-essential
+      sudo apt-get install -y git curl fuse libfuse2 unzip tar gzip build-essential
       ;;
     Darwin*)
       if ! command -v brew >/dev/null; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
       fi
-      brew install git curl tar gzip
+      brew install git curl tar gzip unzip
       ;;
     CYGWIN*|MINGW*|MSYS*)
       if ! command -v git >/dev/null; then
