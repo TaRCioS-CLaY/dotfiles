@@ -94,7 +94,7 @@ setup_ssh() {
 
 # Instala Nix
 install_nix() {
-  if [ ! command -v nix >/dev/null ]; then
+  if ! command -v nix >/dev/null ; then
     echo -e "${GEAR} ${BLUE}Instalando Nix...${NC}"
     sh <(curl -L https://nixos.org/nix/install) --daemon
     mkdir -p ~/.config/nix/
