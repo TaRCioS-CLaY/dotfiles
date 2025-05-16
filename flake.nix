@@ -9,67 +9,56 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, ... }:
     let
-      # system = "x86_64-darwin";
-      system = "x86_64-linux";
-      username = "$(whoami)";
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-      };
-    in {
-      homeConfigurations.username = home-manager.lib.homeManagerConfiguration {
+      system = builtins.currentSystem or "x86_64-linux";
+      username = "clayton";
+
+      homeDirectory =
+        if system == "x86_64-linux" then "/home/${username}"
+        else if system == "aarch64-darwin" || system == "x86_64-darwin" then "/Users/${username}"
+        else throw "Unsupported system: ${system}";
+
+      pkgs = import nixpkgs { inherit system; };
+
+      homeConf = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [{
+        modules = [ {
           home = {
-            inherit username;
-            homeDirectory = "/Users/${username}";
+            inherit username homeDirectory;
             stateVersion = "23.11";
           };
 
           home.packages = with pkgs; [
-            git
-            delta
-            fd
-            curl
-            wget
-            zsh
-            fzf
-            kitty
-            lua
-            luarocks
-            zoxide
-            lazygit
-            xclip
-            appimage-run
-            fuse
-            neovim
+            git delta fd curl wget zsh fzf kitty lua luarocks
+            zoxide lazygit xclip appimage-run fuse neovim fnm
           ];
 
           programs.zsh = {
             enable = true;
-            enableAutosuggestions = true;
-            enableSyntaxHighlighting = true;
+            autosuggestion.enable = true;
+            enableCompletion = true;
+            syntaxHighlighting.enable = true;
             shellAliases = {
               ll = "ls -la";
-              update-env = "cd ~/dotfiles && nix flake update && home-manager switch --flake .#$(whoami)";
+              update-env = "cd ~/dotfiles && nix flake update && home-manager switch --flake .#${username}";
             };
-            initExtra = ''
+            initContent = ''
               eval "$(zoxide init zsh)"
               path+=($HOME/Applications/bin)
               path+=($HOME/.local/share/nvim/mason/bin)
               export FZF_DEFAULT_COMMAND='fd --type f'
+              zvm_after_init_commands+=('[ $(fzf-share)/key-bindings.zsh ] && source $(fzf-share)/completion.zsh  && source $(fzf-share)/key-bindings.zsh')
             '';
-          };
-
-          programs.zplug = {
-            enable = true;
-            plugins = [
-              { name = "z-shell/F-Sy-H"; }
-              { name = "jeffreytse/zsh-vi-mode"; }
-              { name = "plugins/git"; tags = [ from:oh-my-zsh ]; }
-            ];
+            zplug = {
+              enable = true;
+              plugins = [
+                { name = "z-shell/F-Sy-H"; }
+                { name = "jeffreytse/zsh-vi-mode"; }
+                { name = "agnoster/agnoster-zsh-theme"; tags = [ as:theme ];}
+                { name = "plugins/git"; tags = [ from:oh-my-zsh ]; }
+              ];
+            };
           };
 
           programs.kitty = {
@@ -79,11 +68,7 @@
               size = 14;
             };
             settings = {
-              # enabled_layouts = "stack";
-              # window_padding_width = 10;
-              # background_opacity = "0.9";
               tab_bar_style = "powerline";
-              # watcher = "/Users/${username}/.fig/tools/kitty-integration.py";
               include = "${./kitty-theme.conf}";
             };
             keybindings = {
@@ -93,7 +78,7 @@
               "kitty_mod+enter" = "new_window_with_cwd";
               "kitty_mod+z" = "toggle_layout stack";
             };
-            theme = "Gruvbox Dark";
+            themeFile = "gruvbox-dark";
           };
 
           programs.lazygit = {
@@ -106,7 +91,17 @@
               };
             };
           };
-        }];
+        } ];
+      };
+    in {
+      homeConfigurations = {
+        "${username}" = homeConf;
+      };
+
+      packages = {
+        "${system}" = {
+          "${username}" = homeConf.activationPackage;
+        };
       };
     };
 }

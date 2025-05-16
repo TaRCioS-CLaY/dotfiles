@@ -27,10 +27,12 @@ install_fonts() {
   echo -e "${FONT} ${BLUE}Instalando JetBrains Mono Nerd Font...${NC}"
   case "$(uname -s)" in
     Linux*)
-      mkdir -p ~/.local/share/fonts
-      curl -L https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip -o /tmp/JetBrainsMono.zip
-      unzip -q /tmp/JetBrainsMono.zip -d ~/.local/share/fonts/
-      fc-cache -fv
+      if [ ! -f.local/share/fonts/JetBransMono* ]; then
+        mkdir -p ~/.local/share/fonts
+        curl -L https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip -o /tmp/JetBrainsMono.zip
+        unzip -q /tmp/JetBrainsMono.zip -d ~/.local/share/fonts/
+        fc-cache -fv
+      fi
       ;;
     Darwin*)
       brew tap homebrew/cask-fonts
@@ -48,11 +50,11 @@ install_fonts() {
 # Instala dependências básicas
 install_dependencies() {
   echo -e "${GEAR} ${BLUE}Verificando dependências...${NC}"
-  
+
   case "$(uname -s)" in
     Linux*)
       sudo apt-get update
-      sudo apt-get install -y git curl fuse libfuse2 unzip tar gzip build-essential
+      sudo apt-get install -y git curl fuse libfuse2t64 unzip tar gzip build-essential fontconfig
       ;;
     Darwin*)
       if ! command -v brew >/dev/null; then
@@ -92,16 +94,21 @@ setup_ssh() {
 
 # Instala Nix
 install_nix() {
-  if ! command -v nix >/dev/null; then
+  if [! command -v nix >/dev/null ]; then
     echo -e "${GEAR} ${BLUE}Instalando Nix...${NC}"
     sh <(curl -L https://nixos.org/nix/install) --daemon
-    . ~/.nix-profile/etc/profile.d/nix.sh
+    mkdir -p ~/.config/nix/
+    ln -sf ~/dotfiles/configs/nix.conf ~/.config/nix/
+    nix show flake 
+    nix run github:nix-community/home-manager -- switch --flake ~/dotfiles#$(whoami)
+    source /etc/profile 
+    # . ~/.nix-profile/etc/profile.d/nix.sh
   fi
 }
 
 # Configura Neovim do Massolari
 setup_neovim() {
-  echo -e "${BLUE}Configurando Neovim...${NC}"
+  echo -e "${GEAR} ${BLUE}Configurando Neovim...${NC}"
   if [ ! -d ~/.config/nvim ]; then
     git clone https://github.com/Massolari/neovim ~/.config/nvim
     echo -e "${CHECK} ${GREEN}Configuração do Neovim instalada!${NC}"
@@ -111,23 +118,29 @@ setup_neovim() {
 # Configura ambiente
 setup_environment() {
   echo -e "${GEAR} ${BLUE}Configurando ambiente...${NC}"
-  
+
   # Baixa dotfiles
   if [ ! -d ~/dotfiles ]; then
     git clone https://github.com/TaRCioS-CLaY/dotfiles.git ~/dotfiles
   fi
 
   # Cria symlinks
-  # ln -sf ~/dotfiles/configs/.zshrc ~/
   ln -sf ~/dotfiles/configs/.gitconfig ~/
 
-  # Instala via Nix
+  # Instala programas via Nix
   echo -e "${GEAR} ${BLUE}Instalando programas...${NC}"
   nix --extra-experimental-features "nix-command flakes" develop --command bash -c "
-    home-manager switch --flake ~/dotfiles#$(whoami)
-    mkdir -p ~/Applications/bin
-    ln -sf ~/.nix-profile/bin/* ~/Applications/bin/
+  home-manager switch --flake ~/dotfiles#$(whoami)
+  mkdir -p ~/Applications/bin
+  ln -sf ~/.nix-profile/bin/* ~/Applications/bin/
   "
+  # Configura zsh como shell padrão
+  if [ "$(basename $SHELL)" != "zsh" ]; then
+    echo -e "${GEAR} ${BLUE}Configurando Zsh como shell padrão...${NC}"
+    command -v zsh | tee -a /etc/shells
+    chsh -s $(which zsh)
+  fi
+
 }
 
 main() {
@@ -142,6 +155,9 @@ main() {
   echo -e "${ROCKET} ${GREEN}Ambiente configurado com sucesso!${NC}"
   echo -e "Reinicie seu terminal ou execute: ${YELLOW}source ~/.zshrc${NC}"
   echo -e "Para atualizar no futuro: ${YELLOW}cd ~/dotfiles && ./update.sh${NC}"
+  if [ "$(basename $SHELL)" != "zsh" ]; then
+    exec zsh
+  fi
 }
 
 main
