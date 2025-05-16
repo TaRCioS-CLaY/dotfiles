@@ -99,6 +99,7 @@ install_nix() {
     sh <(curl -L https://nixos.org/nix/install) --daemon
     mkdir -p ~/.config/nix/
     ln -sf ~/dotfiles/configs/nix.conf ~/.config/nix/
+    exec bash
     nix show flake 
     nix run github:nix-community/home-manager -- switch --flake ~/dotfiles#$(whoami)
     source /etc/profile 
