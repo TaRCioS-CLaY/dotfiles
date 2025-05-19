@@ -126,7 +126,7 @@ install_nix() {
     nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
     nix-channel --update
     nix-shell '<home-manager>' -A install
-    nix flake show
+    nix flake show ~/dotfiles
     nix run github:nix-community/home-manager -- switch --flake ~/dotfiles#$(whoami)
     source /etc/profile
     # . ~/.nix-profile/etc/profile.d/nix.sh
