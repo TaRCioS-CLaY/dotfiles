@@ -154,8 +154,7 @@ setup_environment() {
 
   # Instala programas via Nix
   echo -e "${GEAR} ${BLUE}Instalando programas...${NC}"
-  echo 'passando aki'
-  nix develop --command bash -c "
+  nix develop ~/dotfiles --command bash -c "
     home-manager switch --flake ~/dotfiles#$(whoami)
     mkdir -p ~/Applications/bin
     ln -sf ~/.nix-profile/bin/* ~/Applications/bin/
