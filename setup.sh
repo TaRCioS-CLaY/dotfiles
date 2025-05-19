@@ -19,18 +19,21 @@ FONT="🔠"
 collect_user_info() {
   echo -e "${ROCKET} ${BLUE}Configuração Inicial${NC}"
 
-  USER_NAME="${1:-"Clayton Garcia"}"
-  USER_EMAIL="${2:-"tarcios.clay@gmail.com"}"
+  local user_name="${1:-"Clayton Garcia"}"
+  local user_email="${2:-"tarcios.clay@gmail.com"}"
 
-  if [ "$1" == "" ]; then
-    read -p "Digite seu nome completo [${USER_NAME}]: " INPUT_NAME
-    USER_NAME="${INPUT_NAME:-$USER_NAME}"
+  if [ -z "${1:-}" ]; then
+    read -p "Digite seu nome completo [${user_name}]: " input_name
+    user_name="${input_name:-$user_name}"
   fi
 
-  if [ "$2" == "" ]; then
-    read -p "Digite seu email [${USER_EMAIL}]: " INPUT_EMAIL
-    USER_EMAIL="${INPUT_EMAIL:-$USER_EMAIL}"
+  if [ -z "${2:-}" ]; then
+    read -p "Digite seu email [${user_email}]: " input_email
+    user_email="${input_email:-$user_email}"
   fi
+
+  USER_NAME="$user_name"
+  USER_EMAIL="$user_email"
 }
 
 # Instala fontes JetBrains Mono Nerd Font
@@ -109,11 +112,18 @@ install_nix() {
     echo -e "${GEAR} ${BLUE}Instalando Nix...${NC}"
     mkdir -p ~/.config/nix/
     ln -sf ~/dotfiles/configs/nix.conf ~/.config/nix/
-    sh <(curl -L https://nixos.org/nix/install) --daemon --yes
+    #curl -L https://nixos.org/nix/install | sh -s -- --daemon --yes
     source /etc/profile
-    nix flake show 
+    sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --daemon
+
+
+    source /etc/profile
+    nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
+    nix-channel --update
+    nix-shell '<home-manager>' -A install
+    nix flake show
     nix run github:nix-community/home-manager -- switch --flake ~/dotfiles#$(whoami)
-    source /etc/profile 
+    source /etc/profile
     # . ~/.nix-profile/etc/profile.d/nix.sh
   fi
 }
@@ -123,6 +133,8 @@ setup_neovim() {
   echo -e "${GEAR} ${BLUE}Configurando Neovim...${NC}"
   if [ ! -d ~/.config/nvim ]; then
     git clone https://github.com/Massolari/neovim ~/.config/nvim
+    mkdir -p ~/.config/nvim/lua/user
+    ln -sf ~/dotfiles/configs/neovim/init.lua ~/.config/nvim/lua/user/init.lua
     echo -e "${CHECK} ${GREEN}Configuração do Neovim instalada!${NC}"
   fi
 }
@@ -141,22 +153,25 @@ setup_environment() {
 
   # Instala programas via Nix
   echo -e "${GEAR} ${BLUE}Instalando programas...${NC}"
-  nix --extra-experimental-features "nix-command flakes" develop --command bash -c "
-  home-manager switch --flake ~/dotfiles#$(whoami)
-  mkdir -p ~/Applications/bin
-  ln -sf ~/.nix-profile/bin/* ~/Applications/bin/
+  echo 'passando aki'
+  nix develop --command bash -c "
+    home-manager switch --flake ~/dotfiles#$(whoami)
+    mkdir -p ~/Applications/bin
+    ln -sf ~/.nix-profile/bin/* ~/Applications/bin/
   "
   # Configura zsh como shell padrão
   if [ "$(basename $SHELL)" != "zsh" ]; then
     echo -e "${GEAR} ${BLUE}Configurando Zsh como shell padrão...${NC}"
-    command -v zsh | tee -a /etc/shells
-    chsh -s $(which zsh)
+    command -v zsh | sudo tee -a /etc/shells
+    sudo chsh -s $(which zsh)
   fi
 
 }
 
 main() {
-  collect_user_info "$1" "$2"
+  local arg1="${1:-}"
+  local arg2="${2:-}"
+  collect_user_info "$arg1" "$arg2"
   install_dependencies
   install_fonts
   setup_ssh

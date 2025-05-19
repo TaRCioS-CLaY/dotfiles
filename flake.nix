@@ -13,6 +13,8 @@
     let
       system = builtins.currentSystem or "x86_64-linux";
       username = "clayton";
+      environment.shells = with pkgs; [zsh];
+      users.defaultUserShell = pkgs.zsh;
 
       homeDirectory =
         if system == "x86_64-linux" then "/home/${username}"
@@ -49,6 +51,7 @@
               path+=($HOME/.local/share/nvim/mason/bin)
               export FZF_DEFAULT_COMMAND='fd --type f'
               zvm_after_init_commands+=('[ $(fzf-share)/key-bindings.zsh ] && source $(fzf-share)/completion.zsh  && source $(fzf-share)/key-bindings.zsh')
+              . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
             '';
             zplug = {
               enable = true;
@@ -97,6 +100,8 @@
       homeConfigurations = {
         "${username}" = homeConf;
       };
+
+      defaultPackage.${system} = homeConf.activationPackage;
 
       packages = {
         "${system}" = {
