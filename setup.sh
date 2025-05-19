@@ -18,8 +18,19 @@ FONT="🔠"
 # Coleta informações do usuário
 collect_user_info() {
   echo -e "${ROCKET} ${BLUE}Configuração Inicial${NC}"
-  read -p "Digite seu nome completo: " USER_NAME
-  read -p "Digite seu email: " USER_EMAIL
+
+  USER_NAME="${1:-"Clayton Garcia"}"
+  USER_EMAIL="${2:-"tarcios.clay@gmail.com"}"
+
+  if [ "$1" == "" ]; then
+    read -p "Digite seu nome completo [${USER_NAME}]: " INPUT_NAME
+    USER_NAME="${INPUT_NAME:-$USER_NAME}"
+  fi
+
+  if [ "$2" == "" ]; then
+    read -p "Digite seu email [${USER_EMAIL}]: " INPUT_EMAIL
+    USER_EMAIL="${INPUT_EMAIL:-$USER_EMAIL}"
+  fi
 }
 
 # Instala fontes JetBrains Mono Nerd Font
@@ -96,11 +107,11 @@ setup_ssh() {
 install_nix() {
   if ! command -v nix >/dev/null ; then
     echo -e "${GEAR} ${BLUE}Instalando Nix...${NC}"
-    sh <(curl -L https://nixos.org/nix/install) --daemon
     mkdir -p ~/.config/nix/
     ln -sf ~/dotfiles/configs/nix.conf ~/.config/nix/
-    exec bash
-    nix show flake 
+    sh <(curl -L https://nixos.org/nix/install) --daemon --yes
+    source /etc/profile
+    nix flake show 
     nix run github:nix-community/home-manager -- switch --flake ~/dotfiles#$(whoami)
     source /etc/profile 
     # . ~/.nix-profile/etc/profile.d/nix.sh
@@ -145,7 +156,7 @@ setup_environment() {
 }
 
 main() {
-  collect_user_info
+  collect_user_info "$1" "$2"
   install_dependencies
   install_fonts
   setup_ssh
@@ -161,4 +172,4 @@ main() {
   fi
 }
 
-main
+main "$@"
