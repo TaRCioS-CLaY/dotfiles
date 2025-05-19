@@ -92,6 +92,11 @@ install_dependencies() {
   if [ -f /etc/fuse.conf ] && ! grep -q "^user_allow_other" /etc/fuse.conf; then
     echo "user_allow_other" | sudo tee -a /etc/fuse.conf >/dev/null
   fi
+
+  # Baixa dotfiles
+  if [ ! -d ~/dotfiles ]; then
+    git clone https://github.com/TaRCioS-CLaY/dotfiles.git ~/dotfiles
+  fi
 }
 
 # Configura SSH
@@ -143,10 +148,6 @@ setup_neovim() {
 setup_environment() {
   echo -e "${GEAR} ${BLUE}Configurando ambiente...${NC}"
 
-  # Baixa dotfiles
-  if [ ! -d ~/dotfiles ]; then
-    git clone https://github.com/TaRCioS-CLaY/dotfiles.git ~/dotfiles
-  fi
 
   # Cria symlinks
   ln -sf ~/dotfiles/configs/.gitconfig ~/
